@@ -1,6 +1,8 @@
-const app = require('app');
-const { listen } = require('./app');
+const app = require('./app');
 
-app.get('/', (req, res) => { res.send('hello world') })
+const dotenv = require("dotenv")
+dotenv.config({ path: 'back/config/config.env' })
 
-app.listen(port, () => { console.log('ejemplo app listen') })
+const server = app.listen(process.env.PORT, () => {
+    console.log(`Servidor iniciado en el puerto: ${process.env.PORT} en modo: ${process.env.NODE_ENV}`)
+})
