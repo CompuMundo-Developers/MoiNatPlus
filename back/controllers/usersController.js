@@ -1,6 +1,17 @@
 const usuario = require('../models/usuarios');
 const bcrypt = require('bcrypt');
 
+
+
+exports.getUsers = async(req, res, next) => {
+    const usuarios = await usuario.find();
+    res.status(200).json({
+        success: true,
+        count: usuarios.length,
+        usuarios
+    })
+}
+
 // ver usuario por id
 exports.getUserById = async(res, req, next)=>{
     const user = await usuario.findById(req.params.id);
@@ -58,34 +69,37 @@ exports.deleteUser = async(req, res, next)  =>{
 
 exports.newUser=async(req, res, next)=>{
     //const user= await usuario.create(req.body);
-    const {nombre, email,password} = req.body
+    const { nombre, email, password } = req.body
 
-    
-    usuario.findOne({email}).then((user)=> {
-        if(user){
-           return res.json({mensaje:"El usuario ya se encuentra registrado"}) 
-        } else if(!nombre || !email || !password){
+    usuario.findOne({ email }).then((user)=> {
+        if(user) {
+           return res.json({
+            mensaje:"El usuario ya se encuentra registrado",
+            user
+        })
+        } else if( !nombre || !email || !password ){
             return res.json({mensaje:'Fatan alguno de estos item nombr/email/password'})
         }else {
-            bcrypt.hash(password, 10, (error, passwordaHasheado) =>{
-                if(EvalError) {
-                    res.json({error })
-                } else {
-                    const nuevoUsuario = new usuario({
-                        nombre,
-                        email,
-                        password:passwordaHasheado
-                    });
-                    await nuevoUsuario.save()
-                        .then((user)=>{
-                        res.status(200).json({
-                            succes:true,
-                            message: 'Usuario Creado correctamente',
-                            user
-                         })
-                         .catch((error) => console.error (error) )
-                }
+                bcrypt.hash(password, 10, (error, passwordaHasheado) =>{
+                    if(error) res.json({ error });
+                    else {
+                        const nuevoUsuario = new usuario({
+                            nombre,
+                            email,
+                            password:passwordaHasheado
+                        });
+                        nuevoUsuario.save().then((user)=>{
+                            res.status(200).json({
+                                success:true,
+                                message: 'Usuario Creado correctamente',
+                                user
+                            })
+                        })
+                            .catch((error) => console.error (error) );
+                    }
+                        
+                });
             }
-        }
-    });
+        })
+
 }

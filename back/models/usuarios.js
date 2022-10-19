@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const usuariosEschema = mongoose.Schema ({
+const usuariosSchema = mongoose.Schema ({
     nombre:{
         type: String,
         required:[true, 'Por favor registra el nombre del Usuario.'],
