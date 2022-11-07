@@ -1,153 +1,62 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useEffect } from 'react'
+import MetaData from './layout/MetaData'
+import {useDispatch, useSelector} from 'react-redux'
+import { getProducts } from '../actions/productActions'
+import { Link } from 'react-router-dom'
+import { useAlert} from 'react-alert'
 
 export const Home = () => {
-  return (
-    <Fragment>
-        <h1 id= 'encabezado_productos'> Ultimos productos</h1>
-        <section id ='productos' className= 'container mt-5'>
-            <div className='row'> 
-            {/*produtco 1 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/cableiphone.webp" alt="Cable Iphone" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Cable Certificado Iphone</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
+    const { loading, productos, error} = useSelector(state=> state.products)
+    const alert= useAlert();
 
+    const dispatch = useDispatch();
+    useEffect(() => {
+        if (error){
+            return alert.error(error)
+        }
+
+        dispatch(getProducts());
+    }, [dispatch])
+
+
+    return (
+        <Fragment>
+            {loading ? <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i> :(
+                <Fragment>
+                    <MetaData title="Bienvenidos a MoinatPlus"></MetaData>
+            <h1 id="encabezado_productos">Ultimos Productos</h1>
+
+            <section id="productos" className='container mt-5'>
+                <div className='row'>
+                    {productos && productos.map (producto => (
+                        <div key={producto._id} className='col-sm-12 col-md-6 col-lg-3 my-3'>
+                        <div className='card p-3 rounded'>
+                            <img className='card-img-top mx-auto' src={producto.imagen[0].url} alt={producto.imagen[0].public_id}></img>
+                            <div className='card-body d-flex flex-column'>
+                                <h5 id="titulo_producto"><Link to={`/producto/${producto._id}`}>{producto.nombre}</Link></h5>
+                                <div className='rating mt-auto'>
+                                    <div className='rating-outer'>
+                                        <div className='rating-inner' style={{width: `${(producto.calificacion/5)*100}%`}}></div>
+                                    </div>
+                                    <span id="No_de_opiniones"> {producto.numCalificaciones} Reviews</span>
                                 </div>
-                                <span id="No_de_opinioines"> 3 reviews</span>
+                                <p className='card-text'>${producto.precio}</p><Link to={`/producto/${producto._id}`} id="view_btn" className='btn btn-block'>
+                                    Ver detalle
+                                </Link>
                             </div>
-                            <p className="card-text">$12.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
                         </div>
                     </div>
-                </div>
-                {/*produtco 2 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/cabletipoc.webp" alt="Cable Tipo C" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Cable Tipo C</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
 
-                                </div>
-                                <span id="No_de_opinioines"> 2 reviews</span>
-                            </div>
-                            <p className="card-text">$10.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
+                    ))}
                     </div>
-                </div>
-                {/*produtco 3 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/cargadorinalambricoiphone.webp" alt="Cargador Inalambrico" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Cargador Inalambrico</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
+            </section>
 
-                                </div>
-                                <span id="No_de_opinioines"> 12 reviews</span>
-                            </div>
-                            <p className="card-text">$80.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-                {/*produtco 4 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/funda_iphone14promax.jpg" alt="Forro Iphone 14 pro max" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Forro Iphone 14 Pro Max</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
+                </Fragment>
 
-                                </div>
-                                <span id="No_de_opinioines"> 18 reviews</span>
-                            </div>
-                            <p className="card-text">$35.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className='row'> 
-            {/*produtco 5 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/cargadorsamsungcr.webp" alt="Cargador Samsung" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Cargador Carga Rapida Samsung</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
+            )}
+            
 
-                                </div>
-                                <span id="No_de_opinioines"> 6 reviews</span>
-                            </div>
-                            <p className="card-text">$25.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-                {/*produtco 6 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/arodeluz.webp" alt="Aro de luz" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Aro de luz lez</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
-
-                                </div>
-                                <span id="No_de_opinioines"> 14 reviews</span>
-                            </div>
-                            <p className="card-text">$150.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-                {/*produtco 7 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/fundasamsuns10plus.jpg" alt="Forro Samsung S10 Plus" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Forro Samsung s10 Plus</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
-
-                                </div>
-                                <span id="No_de_opinioines"> 5 reviews</span>
-                            </div>
-                            <p className="card-text">$15.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-                {/*produtco 8 */}
-                <div className= 'col-sm-12 col-md-6 col-lg-3 my-3'>
-                    <div className='card p-3 roubded'>
-                        <img className='card-img-top mx-auto' src="./images/soportecargador.webp" alt="Soporte Cargador inalambrico" />
-                        <div className='card-body d-flex flex-column'>
-                            <h5 id='titulo_producto'><a href="http://localhost:3000"> Cargador inalambrico MultiEquipos</a></h5>
-                            <div className = 'rating mt-auto'>
-                                <div className='rating-outer'>
-                                    <div className="rating-inner"></div>
-
-                                </div>
-                                <span id="No_de_opinioines"> 24 reviews</span>
-                            </div>
-                            <p className="card-text">$95.000</p><a href="http://localhost:3000" className="btn-btn-block" id="view_btn">Ver Detalles</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </Fragment>
-  )
+        </Fragment>
+    )
 }
-
 export default Home
