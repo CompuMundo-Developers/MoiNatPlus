@@ -1,67 +1,50 @@
-import React, { Fragment, useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { Fragment } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Link, useNavigate } from 'react-router-dom'
+import { addItemToCart, removeItemFromCart } from '../../actions/cartActions'
 import MetaData from '../layout/MetaData'
 
 
 const Cart = () => {
-    const [quantity, setQuantity] = useState(1)
+    const navigate = useNavigate()
+    const dispatch = useDispatch();
+    const { cartItems } = useSelector(state => state.cart)
+    const { user } = useSelector(state => state.auth)
 
-    const increaseQty = () => {
-        const contador = document.querySelector('.count')
-        const qty = contador.valueAsNumber + 1;
-        setQuantity(qty)
+    const increaseQty = (id, quantity, inventario) => {
+        const newQty = quantity + 1;
+        if (newQty > inventario) return;
+        dispatch(addItemToCart(id, newQty))
     }
 
-    const decreaseQty = () => {
-        const contador = document.querySelector('.count')
-
-        const qty = contador.valueAsNumber - 1;
-        setQuantity(qty)
+    const decreaseQty = (id, quantity) => {
+        const newQty = quantity - 1;
+        if (newQty <= 0) return;
+        dispatch(addItemToCart(id, newQty))
     }
 
-    //Json de ejemplo
-    let cartItems = [
-        {
-            "_id": "63513206109735e58d94addd",
-            "nombre": "Funda Samsung s10",
-            "precio": 15000,
-            "imagen": "./images/productos/fundasamsuns10plus.jpg",
-            "inventario": 2,
-        },
-        {
-            "_id": "63513298109735e58d94ade0",
-            "nombre": "Cargador rapido samsung",
-            "precio": 18000,
-            "imagen": "./images/productos/cargadorsamsungcr.webp",
-            "inventario": 6,
-        },
-        {
-            "_id": "635132ea109735e58d94ade3",
-            "nombre": "Cable tipo C",
-            "precio": 10000,
-            "imagen": "./images/productos/cabletipoc.webp",
-            "inventario": 4,
-        },
-        {
-            "_id": "63513379109735e58d94ade6",
-            "nombre": "Soporte cargador inalambrico",
-            "precio": 20000,
-            "imagen": "./images/productos/soportecargador.webp",
-            "inventario": 2,
+    const checkOutHandler = () => {
+        if (user) {
+            navigate("/shipping")
         }
-    ]
+        else {
+            navigate("/login")
+        }
+    }
 
-    cartItems = Array.from(cartItems);
+    const removeCartItemHandler = (id) => {
+        dispatch(removeItemFromCart(id))
+    }
 
     return (
         <Fragment>
-            <MetaData title={'Your Cart'} />
+            <MetaData title={'Mi carrito'} />
 
 
             {cartItems.length === 0 ? <h2 className="mt-5">Su carrito esta vacio</h2> : (
                 <Fragment>
 
-                    <h2 className="mt-5">Su Carrito: <b>{cartItems.length} items</b></h2>
+                    <h2 className="mt-5">Su Carrito: <b>{cartItems.reduce((acc, item) => (acc + Number(item.quantity)), 0)} items</b></h2>
 
                     <div className="row d-flex justify-content-between">
                         <div className="col-12 col-lg-8">
@@ -77,7 +60,7 @@ const Cart = () => {
                                             </div>
 
                                             <div className="col-5 col-lg-3">
-                                                <Link to={`/producto/${item._id}`}>{item.nombre}</Link>
+                                                <Link to={`/producto/${item.product}`}>{item.nombre}</Link>
                                             </div>
 
 
@@ -87,16 +70,16 @@ const Cart = () => {
 
                                             <div className="col-4 col-lg-3 mt-4 mt-lg-0">
                                                 <div className="stockCounter d-inline">
-                                                    <span className="btn btn-danger minus" onClick={decreaseQty}>-</span>
+                                                    <span className="btn btn-danger minus" onClick={() => decreaseQty(item.product, item.quantity)}>-</span>
 
-                                                    <input type="number" className="form-control count d-inline" value={quantity} readOnly />
+                                                    <input type="number" className="form-control count d-inline" value={item.quantity} readOnly />
 
-                                                    <span className="btn btn-primary plus" onClick={increaseQty}>+</span>
+                                                    <span className="btn btn-primary plus" onClick={() => increaseQty(item.product, item.quantity, item.inventario)}>+</span>
                                                 </div>
                                             </div>
 
                                             <div className="col-4 col-lg-1 mt-4 mt-lg-0">
-                                                <i id="delete_cart_item" className="fa fa-trash btn btn-danger" ></i>
+                                                <i id="delete_cart_item" className="fa fa-trash btn btn-danger" onClick={() => removeCartItemHandler(item.product)}></i>
                                             </div>
 
                                         </div>
@@ -111,13 +94,11 @@ const Cart = () => {
                             <div id="order_summary">
                                 <h4>Total de la Compra</h4>
                                 <hr />
-                                <p>Subtotal:  <span className="order-summary-values">$63.000</span></p>
-                                <p>Est. total: <span className="order-summary-values">$63.000</span></p>
+                                <p>Productos:  <span className="order-summary-values">{cartItems.reduce((acc, item) => (acc + Number(item.quantity)), 0)} (Unidades)</span></p>
+                                <p>Est. total: <span className="order-summary-values">${cartItems.reduce((acc, item) => acc + (item.quantity * item.precio), 0).toFixed(2)}</span></p>
 
                                 <hr />
-                                <button id="checkoubtn" className="btn btn-primary btn-block">Comprar!</button>
-
-                                <button id="checkoutbtn" className="btn btn-danger btn-block">Finalizar Comprar</button>
+                                <button id="checkout_btn" className="btn btn-primary btn-block" onClick={checkOutHandler}>Comprar!</button>
                             </div>
                         </div>
                     </div>

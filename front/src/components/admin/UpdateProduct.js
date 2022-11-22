@@ -1,16 +1,16 @@
-import React, { Fragment, useState, useEffect } from 'react'
-
+import React, { Fragment, useEffect, useState } from 'react'
 import MetaData from '../layout/MetaData'
 import Sidebar from './Sidebar'
 
 import { useAlert } from 'react-alert'
 import { useDispatch, useSelector } from 'react-redux'
-import { newProduct, clearErrors } from '../../actions/productActions'
-import { NEW_PRODUCT_RESET } from '../../constants/productConstants'
-import { useNavigate } from 'react-router-dom'
+import { clearErrors, getProductDetails, updateProduct } from '../../actions/productActions'
+import { UPDATE_PRODUCT_RESET } from '../../constants/productConstants'
+import { useNavigate, useParams } from 'react-router-dom'
 
-const NewProduct = () => {
+export const UpdateProduct = () => {
     const navigate = useNavigate()
+    const params = useParams();
     const [nombre, setNombre] = useState('');
     const [precio, setPrecio] = useState(0);
     const [descripcion, setDescripcion] = useState('');
@@ -19,53 +19,52 @@ const NewProduct = () => {
     const [vendedor, setVendedor] = useState('');
     const [imagen, setImagen] = useState([]);
     const [imagenPreview, setImagenPreview] = useState([])
+    const [oldImagen, setOldImagen] = useState([])
 
     const categorias = [
-        'Cargadores',
-        'Forros',
-        'Parlantes',
-        'Aros de luz',
-        'Protectores',
-        'Controles de juego',
-        'Dedales free fire',
-        'Controles tv',
-        'Cables',
-        'Adaptadores otg',
-        'Vidrios templados',
-        'Manos libres',
-        'Airpods',
-        'Smart watch',
-        'Tablet',
-        'Micrófonos',
-        'Bluetooth para carro',
-        'Car wireless',
-        'Cargadores',
-        'Mouse',
-        'Diademas',
-        'Power bank',
-        'PSP',
-        'Soporte cel para carro'
+        "Alimento seco",
+        "Alimento humedo",
+        "Accesorios",
+        "Cuidado e Higiene",
+        "Medicamentos",
+        "Snacks",
+        "Juguetes"
     ]
 
     const alert = useAlert();
     const dispatch = useDispatch();
 
-    const { loading, error, success } = useSelector(state => state.newProduct);
+    const { loading, isUpdated, error: updateError } = useSelector(state => state.product)
+    const { error, product } = useSelector(state => state.productDetails)
+    const productId = params.id;
 
     useEffect(() => {
-
+        if (product && product._id !== productId) {
+            dispatch(getProductDetails(productId));
+        } else {
+            setNombre(product.nombre);
+            setPrecio(product.precio);
+            setDescripcion(product.descripcion);
+            setCategoria(product.categoria);
+            setVendedor(product.vendedor);
+            setInventario(product.inventario);
+            setOldImagen(product.imagen)
+        }
         if (error) {
-            alert.error(error);
-            dispatch(clearErrors())
+            alert.error(error)
+            dispatch(clearErrors)
+        }
+        if (updateError) {
+            alert.error(error)
+            dispatch(clearErrors)
+        }
+        if (isUpdated) {
+            alert.success("Producto actualizado correctamente");
+            navigate("/dashboard")
+            dispatch({ type: UPDATE_PRODUCT_RESET })
         }
 
-        if (success) {
-            navigate('/dashboard');
-            alert.success('Product created successfully');
-            dispatch({ type: NEW_PRODUCT_RESET })
-        }
-
-    }, [dispatch, alert, error, success])
+    }, [dispatch, alert, error, isUpdated, updateError, product, productId])
 
     const submitHandler = (e) => {
         e.preventDefault();
@@ -82,7 +81,7 @@ const NewProduct = () => {
             formData.append('imagen', img)
         })
 
-        dispatch(newProduct(formData))
+        dispatch(updateProduct(product._id, formData))
     }
 
     const onChange = e => {
@@ -91,6 +90,7 @@ const NewProduct = () => {
 
         setImagenPreview([]);
         setImagen([])
+        setOldImagen([])
 
         files.forEach(file => {
             const reader = new FileReader();
@@ -106,10 +106,9 @@ const NewProduct = () => {
         })
     }
 
-
     return (
         <Fragment>
-            <MetaData title={'Nuevo Producto'} />
+            <MetaData title={'Actualizar producto'} />
             <div className="row">
                 <div className="col-12 col-md-2">
                     <Sidebar />
@@ -119,7 +118,7 @@ const NewProduct = () => {
                     <Fragment>
                         <div className="wrapper my-5">
                             <form className="shadow-lg" onSubmit={submitHandler} encType='multipart/form-data'>
-                                <h1 className="mb-4">Nuevo Producto</h1>
+                                <h1 className="mb-4">Actualizar Producto</h1>
 
                                 <div className="form-group">
                                     <label htmlFor="name_field">Nombre</label>
@@ -144,7 +143,7 @@ const NewProduct = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label htmlFor="description_field">Descripción</label>
+                                    <label htmlFor="description_field">Descripcion</label>
                                     <textarea className="form-control"
                                         id="description_field"
                                         rows="8"
@@ -156,7 +155,8 @@ const NewProduct = () => {
                                     <label htmlFor="category_field">Categoria</label>
                                     <select className="form-control"
                                         id="category_field"
-                                        value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+                                        value={categoria}
+                                        onChange={(e) => setCategoria(e.target.value)}>
                                         {categorias.map(categoria => (
                                             <option key={categoria} value={categoria} >{categoria}</option>
                                         ))}
@@ -202,8 +202,12 @@ const NewProduct = () => {
                                         </label>
                                     </div>
 
+                                    {oldImagen && oldImagen.map(img => (
+                                        <img key={img} src={img.url} alt={img.url} className="mt-3 mr-2" width="55" height="52" />
+                                    ))}
+
                                     {imagenPreview.map(img => (
-                                        <img src={img} key={img} alt="Images Preview" className="mt-3 mr-2" width="55" height="52" />
+                                        <img src={img} key={img} alt="Vista Previa" className="mt-3 mr-2" width="55" height="52" />
                                     ))}
 
                                 </div>
@@ -215,7 +219,7 @@ const NewProduct = () => {
                                     className="btn btn-block py-3"
                                     disabled={loading ? true : false}
                                 >
-                                    CREATE
+                                    ACTUALIZAR
                                 </button>
 
                             </form>
@@ -227,5 +231,3 @@ const NewProduct = () => {
         </Fragment>
     )
 }
-
-export default NewProduct

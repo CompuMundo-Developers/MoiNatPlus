@@ -4,22 +4,30 @@ const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const tokenEnviado = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail")
 const crypto = require("crypto")
+const cloudinary = require("cloudinary")
 
 //Registrar un nuevo usuario /api/usuario/registro
 exports.registroUsuario = catchAsyncErrors(async (req, res, next) => {
     const { nombre, email, password } = req.body;
+
+    const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+        folder: "avatars",
+        width: 240,
+        crop: "scale"
+    })
 
     const user = await User.create({
         nombre,
         email,
         password,
         avatar: {
-            public_id: "0CA0QjRxqFwoTCIj95vK3gPsCFQAAAAAdAAAAABAE",
-            url: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fpixabay.com%2Fes%2Fvectors%2Fmujer-usuario-avatar-perfil-2022387%2F&psig=AOvVaw1ainpRYtjTP8i1u2jynRrd&ust=1666961033806000&source=images&cd=vfe&ved=0CA0QjRxqFwoTCIj95vK3gPsCFQAAAAAdAAAAABAE"
+            public_id: result.public_id,
+            url: result.secure_url
         }
     })
     tokenEnviado(user, 201, res)
 })
+
 
 //Iniciar Sesion - Login
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
@@ -72,11 +80,11 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     await user.save({ validateBeforeSave: false })
 
     //Crear una url para hacer el reset de la contraseña
-    const resetUrl = `${req.protocol}://${req.get("host")}/api/resetPassword/${resetToken}`;
+    const resetUrl = `${req.protocol}://${req.get("host")}/resetPassword/${resetToken}`;
 
     const mensaje = `Hola!\n\nTu link para ajustar una nueva contraseña es el 
     siguiente: \n\n${resetUrl}\n\n
-    Si no solicitaste este link, por favor comunicate con soporte.\n\n Att:\nMoinatPlus Store`
+    Si no solicitaste este link, por favor comunicate con soporte.\n\n Att:\nVetyShop Store`
 
     try {
         await sendEmail({
@@ -125,8 +133,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     tokenEnviado(user, 200, res)
 })
 
-
-//ver perfil de usuario(usuario que esta logeado)
+//Ver perfil de usuario (Usuario que esta logueado)
 exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.user.id);
 
@@ -137,28 +144,50 @@ exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
 })
 
 
-//updaet contraseña (usuario logeado)
+//Update Contraseña (usuario logueado)
 exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.user.id).select("+password");
 
-    //revisamos sil a contraseñan vieja es igual ala nueva
+    //Revisamos si la contraseña vieja es igual a la nueva
     const sonIguales = await user.compararPass(req.body.oldPassword)
+
     if (!sonIguales) {
         return next(new ErrorHandler("La contraseña actual no es correcta", 401))
     }
+
     user.password = req.body.newPassword;
     await user.save();
+
     tokenEnviado(user, 200, res)
 })
 
-//Update pefil de usuario (logueado)
+
+//Update perfil de usuario (logueado)
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
+    //Actualizar el email por user a decisiòn de cada uno
     const newUserData = {
         nombre: req.body.nombre,
         email: req.body.email
     }
 
-    //update avatar:pendiente
+    //updata Avatar: 
+    if (req.body.avatar !== "") {
+        const user = await User.findById(req.user.id)
+        const image_id = user.avatar.public_id;
+        const res = await cloudinary.v2.uploader.destroy(image_id);
+
+        const result = await cloudinary.v2.uploader.upload(req.body.avatar, {
+            folder: "avatars",
+            width: 240,
+            crop: "scale"
+        })
+
+        newUserData.avatar = {
+            public_id: result.public_id,
+            url: result.secure_url
+        }
+    }
+
     const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
         new: true,
         runValidators: true,
@@ -171,9 +200,10 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
     })
 })
 
-//servicio controladores sobre usuarios por parte del admin
 
-//ver todos los usuarios
+//Servicios controladores sobre usuarios por parte de los ADMIN
+
+//Ver todos los usuarios
 exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
     const users = await User.find();
 
@@ -183,12 +213,12 @@ exports.getAllUsers = catchAsyncErrors(async (req, res, next) => {
     })
 })
 
-//Ver el detalle del 1 usuario
+//Ver el detalle de 1 usuario
 exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-        return next(new ErrorHandler(`no se ha encontrado ningun usuario con el id: ${req.params.id}`))
+        return next(new ErrorHandler(`No se ha encontrado ningun usuario con el id: ${req.params.id}`))
     }
 
     res.status(200).json({
@@ -197,12 +227,12 @@ exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
     })
 })
 
-//Actualizar perfil de usuario como administrador
+//Actualizar perfil de usuario (como administrador)
 exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     const nuevaData = {
         nombre: req.body.nombre,
         email: req.body.email,
-        role: req.body.rol
+        role: req.body.role
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, nuevaData, {
@@ -217,12 +247,13 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     })
 })
 
-//eliminar un usuario
-exports.deleteUser = catchAsyncErrors(async (req, tes, next) => {
+//Eliminar usuario (admin)
+exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-        return next(new ErrorHandler(`Usuario con id: ${req.params.id} no se encuentra en nuestra BAse de Datos`))
+        return next(new ErrorHandler(`Usuario con id: ${req.params.id} 
+        no se encuentra en nuestra base de datos`))
     }
 
     await user.remove();
@@ -232,13 +263,3 @@ exports.deleteUser = catchAsyncErrors(async (req, tes, next) => {
         message: "Usuario eliminado correctamente"
     })
 })
-
-/* //Inactivar un usuario
-exports.inactiveUser = catchAsyncErrors(async(req,res,next)=>{
-    const user = await User.findById(req.params.id);
-    if (!user){
-        menseje aqui
-    }
-    user.estado="inactivo"
-})
-*/
