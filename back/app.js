@@ -7,7 +7,7 @@ const fileUpload = require('express-fileupload')
 const path = require("path")
 
 //Seteamos archivo de configuracion
-if (process.env.NODE_ENV !== "PRODUCTION") require('dotenv').config({ path: 'back/config/config.env' })
+if (process.env.NODE_ENV === "PRODUCTION") require('dotenv').config({ path: 'back/config/config.env' })
 
 //Uso de constantes importadas
 app.use(express.json());

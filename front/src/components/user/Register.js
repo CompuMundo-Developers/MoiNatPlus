@@ -9,7 +9,7 @@ export const Register = () => {
     const [user, setUser] = useState({
         nombre: "",
         email: "",
-        password: "",
+        password: ""
     })
     const navigate = useNavigate();
     const { nombre, email, password } = user;
