@@ -57,6 +57,7 @@ const NewProduct = () => {
         if (error) {
             alert.error(error);
             dispatch(clearErrors())
+            console.log('aqui hay error')
         }
 
         if (success) {
