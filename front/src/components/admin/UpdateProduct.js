@@ -22,13 +22,30 @@ export const UpdateProduct = () => {
     const [oldImagen, setOldImagen] = useState([])
 
     const categorias = [
-        "Alimento seco",
-        "Alimento humedo",
-        "Accesorios",
-        "Cuidado e Higiene",
-        "Medicamentos",
-        "Snacks",
-        "Juguetes"
+        'Cargadores',
+        'Forros',
+        'Parlantes',
+        'Aros de luz',
+        'Protectores',
+        'Controles de juego',
+        'Dedales free fire',
+        'Controles tv',
+        'Cables',
+        'Adaptadores otg',
+        'Vidrios templados',
+        'Manos libres',
+        'Airpods',
+        'Smart watch',
+        'Tablet',
+        'Micrófonos',
+        'Bluetooth para carro',
+        'Car wireless',
+        'Cargadores',
+        'Mouse',
+        'Diademas',
+        'Power bank',
+        'PSP',
+        'Soporte cel para carro'
     ]
 
     const alert = useAlert();
